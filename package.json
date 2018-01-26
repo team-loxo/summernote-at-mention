@@ -1,0 +1,23 @@
+{
+  "name": "summernote-at-mention",
+  "version": "1.0.0",
+  "description": "@mention plugin for summernote with support for autocomplete.",
+  "repository": "git@github.com:team-loxo/summernote-at-mention.git",
+  "author": "Juan Sebastian Angarita",
+  "license": "MIT",
+  "scripts": {
+    "build": "./node_modules/.bin/webpack"
+  },
+  "dependencies": {
+    "babel-cli": "6.26.0",
+    "babel-loader": "7.1.2",
+    "babel-polyfill": "6.26.0",
+    "babel-preset-env": "1.6.1",
+    "webpack": "3.10.0"
+  },
+  "babel": {
+    "presets": [
+      "env"
+    ]
+  }
+}
