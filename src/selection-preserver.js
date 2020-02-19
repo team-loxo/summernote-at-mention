@@ -1,7 +1,7 @@
 class SelectionPreserver {
   constructor(rootNode) {
     if (rootNode === undefined || rootNode === null) {
-      throw new Error('Please provide a valid rootNode.');
+      throw new Error("Please provide a valid rootNode.");
     }
 
     this.rootNode = rootNode;
@@ -12,12 +12,17 @@ class SelectionPreserver {
   preserve() {
     const selection = window.getSelection();
     this.rangeStartOffset = selection.getRangeAt(0).startOffset;
-    this.rangeStartContainerAddress = this.findRangeStartContainerAddress(selection);
+    this.rangeStartContainerAddress = this.findRangeStartContainerAddress(
+      selection
+    );
   }
 
   restore(restoreIndex) {
-    if (this.rangeStartOffset === null || this.rangeStartContainerAddress === null) {
-      throw new Error('Please call preserve() first.');
+    if (
+      this.rangeStartOffset === null ||
+      this.rangeStartContainerAddress === null
+    ) {
+      throw new Error("Please call preserve() first.");
     }
 
     let rangeStartContainer = this.findRangeStartContainer();
@@ -35,7 +40,7 @@ class SelectionPreserver {
   findRangeStartContainer() {
     let rangeStartContainer = this.rootNode;
 
-    this.rangeStartContainerAddress.forEach((address) => {
+    this.rangeStartContainerAddress.forEach(address => {
       rangeStartContainer = rangeStartContainer.childNodes[address];
     });
 

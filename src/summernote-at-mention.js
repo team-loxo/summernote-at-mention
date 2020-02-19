@@ -1,6 +1,6 @@
 import "babel-polyfill";
 
-import SelectionPreserver from './selection-preserver';
+import SelectionPreserver from "./selection-preserver";
 
 const WORD_REGEX = /^[^\s]+$/;
 
@@ -8,31 +8,32 @@ const UP_KEY_CODE = 38;
 const DOWN_KEY_CODE = 40;
 const ENTER_KEY_CODE = 13;
 
-(function (factory) {
-    if (typeof define === 'function' && define.amd) {
-        define(['jquery'], factory);
-    } else if (typeof module === 'object' && module.exports) {
-        module.exports = factory(require('jquery'));
-    } else {
-        factory(window.jQuery);
-    }
-}(function($) {
+(function(factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["jquery"], factory);
+  } else if (typeof module === "object" && module.exports) {
+    module.exports = factory(require("jquery"));
+  } else {
+    factory(window.jQuery);
+  }
+})(function($) {
   $.extend($.summernote.plugins, {
-    'summernoteAtMention': function(context) {
-
+    summernoteAtMention: function(context) {
       /************************
        * Setup instance vars. *
        ************************/
       this.editableEl = context.layoutInfo.editable[0];
       this.editorEl = context.layoutInfo.editor[0];
 
-      this.autocompleteAnchor = {left: null, top: null};
+      this.autocompleteAnchor = { left: null, top: null };
       this.autocompleteContainer = null;
       this.showingAutocomplete = false;
       this.selectedIndex = null;
       this.suggestions = null;
 
-      this.getSuggestions = (_) => {return []};
+      this.getSuggestions = _ => {
+        return [];
+      };
 
       /********************
        * Read-in options. *
@@ -42,7 +43,8 @@ const ENTER_KEY_CODE = 13;
         context.options.callbacks &&
         context.options.callbacks.summernoteAtMention
       ) {
-        const summernoteCallbacks = context.options.callbacks.summernoteAtMention;
+        const summernoteCallbacks =
+          context.options.callbacks.summernoteAtMention;
 
         if (summernoteCallbacks.getSuggestions) {
           this.getSuggestions = summernoteCallbacks.getSuggestions;
@@ -57,10 +59,10 @@ const ENTER_KEY_CODE = 13;
        * Events *
        **********/
       this.events = {
-        'summernote.blur': () => {
+        "summernote.blur": () => {
           if (this.showingAutocomplete) this.hideAutocomplete();
         },
-        'summernote.keydown': (_, event) => {
+        "summernote.keydown": (_, event) => {
           if (this.showingAutocomplete) {
             switch (event.keyCode) {
               case ENTER_KEY_CODE: {
@@ -72,16 +74,18 @@ const ENTER_KEY_CODE = 13;
               case UP_KEY_CODE: {
                 event.preventDefault();
                 event.stopPropagation();
-                const newIndex = this.selectedIndex === 0 ? 0 : this.selectedIndex - 1;
+                const newIndex =
+                  this.selectedIndex === 0 ? 0 : this.selectedIndex - 1;
                 this.updateAutocomplete(this.suggestions, newIndex);
                 break;
               }
               case DOWN_KEY_CODE: {
                 event.preventDefault();
                 event.stopPropagation();
-                const newIndex = this.selectedIndex === this.suggestions.length - 1 ?
-                  this.selectedIndex :
-                  this.selectedIndex + 1;
+                const newIndex =
+                  this.selectedIndex === this.suggestions.length - 1
+                    ? this.selectedIndex
+                    : this.selectedIndex + 1;
 
                 this.updateAutocomplete(this.suggestions, newIndex);
                 break;
@@ -89,29 +93,34 @@ const ENTER_KEY_CODE = 13;
             }
           }
         },
-        'summernote.keyup': (_, event) => {
+        "summernote.keyup": (_, event) => {
           const selection = document.getSelection();
           const currentText = selection.anchorNode.nodeValue;
-          const {word, absoluteIndex} = this.findWordAndIndices(currentText || '', selection.anchorOffset);
+          const { word, absoluteIndex } = this.findWordAndIndices(
+            currentText || "",
+            selection.anchorOffset
+          );
           const trimmedWord = word.slice(1);
 
-          if (this.showingAutocomplete && ![DOWN_KEY_CODE, UP_KEY_CODE, ENTER_KEY_CODE].includes(event.keyCode)) {
-            if (word[0] === '@') {
+          if (
+            this.showingAutocomplete &&
+            ![DOWN_KEY_CODE, UP_KEY_CODE, ENTER_KEY_CODE].includes(
+              event.keyCode
+            )
+          ) {
+            if (word[0] === "@") {
               const suggestions = this.getSuggestions(trimmedWord);
               this.updateAutocomplete(suggestions, this.selectedIndex);
             } else {
               this.hideAutocomplete();
             }
-          } else if (!this.showingAutocomplete && word[0] === '@') {
+          } else if (!this.showingAutocomplete && word[0] === "@") {
             this.suggestions = this.getSuggestions(trimmedWord);
             this.selectedIndex = 0;
-            this.showAutocomplete(
-              absoluteIndex,
-              selection.anchorNode,
-            );
+            this.showAutocomplete(absoluteIndex, selection.anchorNode);
           }
         }
-      }
+      };
 
       /***********
        * Helpers *
@@ -130,88 +139,103 @@ const ENTER_KEY_CODE = 13;
 
         const selection = document.getSelection();
         const currentText = selection.anchorNode.nodeValue;
-        const {word, absoluteIndex} = this.findWordAndIndices(currentText || '', selection.anchorOffset);
+        const { word, absoluteIndex } = this.findWordAndIndices(
+          currentText || "",
+          selection.anchorOffset
+        );
 
         const selectionPreserver = new SelectionPreserver(this.editableEl);
         selectionPreserver.preserve();
 
         selection.anchorNode.textContent =
-          currentText.slice(0, absoluteIndex + 1) + newWord + ' ' + currentText.slice(absoluteIndex + word.length);
+          currentText.slice(0, absoluteIndex + 1) +
+          newWord +
+          " " +
+          currentText.slice(absoluteIndex + word.length);
 
         selectionPreserver.restore(absoluteIndex + newWord.length + 1);
 
         if (context.options.callbacks.onChange !== undefined) {
           context.options.callbacks.onChange(this.editableEl.innerHTML);
         }
-      }
+      };
 
       this.updateAutocomplete = (suggestions, selectedIndex) => {
         this.selectedIndex = selectedIndex;
         this.suggestions = suggestions;
         this.renderAutocomplete();
-      }
+      };
 
       this.showAutocomplete = (atTextIndex, indexAnchor) => {
         if (this.showingAutocomplete) {
-          throw new Error('Cannot call showAutocomplete if autocomplete is already showing.');
+          throw new Error(
+            "Cannot call showAutocomplete if autocomplete is already showing."
+          );
         }
         this.setAutocompleteAnchor(atTextIndex, indexAnchor);
         this.renderAutocompleteContainer();
         this.renderAutocomplete();
         this.showingAutocomplete = true;
-      }
+      };
 
       this.renderAutocompleteContainer = () => {
-        this.autocompleteContainer = document.createElement('div');
-        this.autocompleteContainer.style.top = String(this.autocompleteAnchor.top) + "px";
-        this.autocompleteContainer.style.left = String(this.autocompleteAnchor.left) + "px";
-        this.autocompleteContainer.style.position = 'absolute';
-        this.autocompleteContainer.style.backgroundColor = '#e4e4e4';
+        this.autocompleteContainer = document.createElement("div");
+        this.autocompleteContainer.style.top =
+          String(this.autocompleteAnchor.top) + "px";
+        this.autocompleteContainer.style.left =
+          String(this.autocompleteAnchor.left) + "px";
+        this.autocompleteContainer.style.position = "absolute";
+        this.autocompleteContainer.style.backgroundColor = "#e4e4e4";
         this.autocompleteContainer.style.zIndex = Number.MAX_SAFE_INTEGER;
 
         document.body.appendChild(this.autocompleteContainer);
-      }
+      };
 
       this.renderAutocomplete = () => {
         if (this.autocompleteContainer === null) {
-          throw new Error('Cannot call renderAutocomplete without an autocompleteContainer. ');
+          throw new Error(
+            "Cannot call renderAutocomplete without an autocompleteContainer. "
+          );
         }
-        const autocompleteContent = document.createElement('div');
+        const autocompleteContent = document.createElement("div");
 
         this.suggestions.forEach((suggestion, idx) => {
-          const suggestionDiv = document.createElement('div');
+          const suggestionDiv = document.createElement("div");
           suggestionDiv.textContent = suggestion;
 
-          suggestionDiv.style.padding = '5px 10px';
+          suggestionDiv.style.padding = "5px 10px";
 
           if (this.selectedIndex === idx) {
-            suggestionDiv.style.backgroundColor = '#2e6da4';
-            suggestionDiv.style.color = 'white';
+            suggestionDiv.style.backgroundColor = "#2e6da4";
+            suggestionDiv.style.color = "white";
           }
 
           autocompleteContent.appendChild(suggestionDiv);
         });
 
-        this.autocompleteContainer.innerHTML = '';
+        this.autocompleteContainer.innerHTML = "";
         this.autocompleteContainer.appendChild(autocompleteContent);
-      }
+      };
 
       this.hideAutocomplete = () => {
-        if (!this.showingAutocomplete) throw new Error('Cannot call hideAutocomplete if autocomplete is not showing.');
+        if (!this.showingAutocomplete)
+          throw new Error(
+            "Cannot call hideAutocomplete if autocomplete is not showing."
+          );
 
         document.body.removeChild(this.autocompleteContainer);
-        this.autocompleteAnchor = {left: null, top: null};
+        this.autocompleteAnchor = { left: null, top: null };
         this.selectedIndex = null;
         this.suggestions = null;
         this.showingAutocomplete = false;
-      }
+      };
 
       this.findWordAndIndices = (text, offset) => {
         if (offset > text.length) {
-          return {word: '', relativeIndex: 0};
+          return { word: "", relativeIndex: 0 };
         } else {
-          let leftWord = '';
-          let rightWord = '';
+          let leftWord = "";
+          let rightWord = "";
           let relativeIndex = 0;
           let absoluteIndex = offset;
 
@@ -240,10 +264,10 @@ const ENTER_KEY_CODE = 13;
           return {
             word: leftWord + rightWord,
             relativeIndex,
-            absoluteIndex,
+            absoluteIndex
           };
         }
-      }
+      };
 
       this.setAutocompleteAnchor = (atTextIndex, indexAnchor) => {
         let html = indexAnchor.parentNode.innerHTML;
@@ -251,14 +275,14 @@ const ENTER_KEY_CODE = 13;
 
         let atIndex = -1;
         for (let i = 0; i <= atTextIndex; i++) {
-          if (text[i] === '@') {
+          if (text[i] === "@") {
             atIndex++;
           }
         }
 
         let htmlIndex;
         for (let i = 0, htmlAtIndex = 0; i < html.length; i++) {
-          if (html[i] === '@') {
+          if (html[i] === "@") {
             if (htmlAtIndex === atIndex) {
               htmlIndex = i;
               break;
@@ -268,24 +292,25 @@ const ENTER_KEY_CODE = 13;
           }
         }
 
-        const atNodeId = 'at-node-' + String(Math.floor(Math.random() * 10000));
+        const atNodeId = "at-node-" + String(Math.floor(Math.random() * 10000));
         const spanString = `<span id="${atNodeId}">@</span>`;
 
         const selectionPreserver = new SelectionPreserver(this.editableEl);
         selectionPreserver.preserve();
 
-        indexAnchor.parentNode.innerHTML = html.slice(0, htmlIndex) + spanString + html.slice(htmlIndex + 1);
-        const anchorElement = document.querySelector('#' + atNodeId);
+        indexAnchor.parentNode.innerHTML =
+          html.slice(0, htmlIndex) + spanString + html.slice(htmlIndex + 1);
+        const anchorElement = document.querySelector("#" + atNodeId);
         const anchorBoundingRect = anchorElement.getBoundingClientRect();
 
         this.autocompleteAnchor = {
           top: anchorBoundingRect.top + anchorBoundingRect.height + 2,
-          left: anchorBoundingRect.left,
-        }
+          left: anchorBoundingRect.left
+        };
 
         selectionPreserver.findRangeStartContainer().parentNode.innerHTML = html;
         selectionPreserver.restore();
-      }
-    },
+      };
+    }
   });
-}));
+});
