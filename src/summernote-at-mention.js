@@ -125,7 +125,23 @@ const ENTER_KEY_CODE = 13;
       /***********
        * Helpers *
        ***********/
+
       this.handleEnter = () => {
+        this.handleSelection();
+      };
+
+      this.handleClick = suggestion => {
+        const selectedIndex = this.suggestions.findIndex(s => s === suggestion);
+
+        if (selectedIndex === -1) {
+          throw new Error("Unable to find suggestion in suggestions.");
+        }
+
+        this.selectedIndex = selectedIndex;
+        this.handleSelection();
+      };
+
+      this.handleSelection = () => {
         if (this.suggestions === null || this.suggestions.length === 0) {
           return;
         }
@@ -209,6 +225,10 @@ const ENTER_KEY_CODE = 13;
             suggestionDiv.style.backgroundColor = "#2e6da4";
             suggestionDiv.style.color = "white";
           }
+
+          suggestionDiv.addEventListener("mousedown", () => {
+            this.handleClick(suggestion);
+          });
 
           autocompleteContent.appendChild(suggestionDiv);
         });
